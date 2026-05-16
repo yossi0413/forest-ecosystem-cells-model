@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>森林遷移シミュレーション（陽樹・陰樹）</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <h1>🌲 森林生態系モデル</h1>
+            <p class="subtitle">完全統合シミュレーター (植物＆土壌)</p>
+
+            <div class="actions" style="margin-top: 10px; margin-bottom: 10px;">
+                <button id="btnStart" class="primary" style="font-size: 1.1rem; padding: 12px;">▶ スタート</button>
+                <div style="display: flex; gap: 10px; width: 100%; margin-top: 10px;">
+                    <button id="btnStep">⏭ 1ステップ</button>
+                    <button id="btnReset" class="danger">🛠️ リセット</button>
+                </div>
+            </div>
+
+            <div class="control-group" style="margin-bottom: 20px;">
+                <label>シミュレーション速度: <span id="speedVal">5</span></label>
+                <input type="range" id="simSpeed" min="1" max="10" value="5" step="1">
+            </div>
+
+            <!-- 環境評価システム（操作と結果を統合） -->
+            <div id="evaluation-card" class="evaluation-card compact" style="margin-bottom: 25px;">
+                <div class="eval-header">
+                    <span class="score-label">生態系サンプリング</span>
+                    <div class="status-badge investigative" id="eval-status">待機中</div>
+                </div>
+                <div class="progress-container" style="margin-top: 5px; margin-bottom: 10px;">
+                    <div class="progress-bar" id="eval-progress" style="width: 0%"></div>
+                </div>
+                <button id="btnStartEval" class="action-btn" style="width: 100%; padding: 8px; font-size: 0.85rem; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 15px;">📊 調査開始 (100年間)</button>
+                
+                <div class="chart-panel compact-chart">
+                    <h3 class="panel-title" style="font-size: 0.75rem;">総合評価（直近の3件）</h3>
+                    <div class="chart-wrapper" style="height: 180px;">
+                        <canvas id="historyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="disaster-actions" style="margin-bottom: 20px;">
+                <p style="margin: 0 0 5px 0; font-size: 0.85rem; color: #fca5a5; font-weight: bold;">⚠️ 手動災害発生</p>
+                <div style="display: flex; gap: 8px; width: 100%;">
+                    <button id="btnVolcano" class="volcano" style="font-size: 0.8rem; padding: 8px 4px;">🌋 火山</button>
+                    <button id="btnWildfire" class="wildfire" style="font-size: 0.8rem; padding: 8px 4px;">🔥 火事</button>
+                    <button id="btnTyphoon" class="typhoon" style="font-size: 0.8rem; padding: 8px 4px;">🌀 台風</button>
+                </div>
+            </div>
+            <!-- 気候プリセット（details のすぐ上） -->
+<div class="preset-group" style="margin-bottom:20px;">
+  <label for="climatePresetSelect" style="font-weight:600; color:#60a5fa;">
+    🌎 環境プリセット：
+  </label>
+  <select id="climatePresetSelect" style="margin-left:8px;">
+    <option value="custom" hidden>カスタム (custom)</option>
+    <option value="tropical">熱帯雨林</option>
+    <option value="temperate">温帯森林</option>
+    <option value="desert">乾燥草原／砂漠</option>
+    <option value="boreal">亜寒帯森林</option>
+    <option value="alpine">高山ガレ場</option>
+    <option value="savanna">サバナ</option>
+    <option value="moistGrassland">湿潤草原</option>
+    <option value="wetTropical">湿潤熱帯</option>
+    <option value="volcanic">火山帯</option>
+    <option value="moon">不毛の静寂</option>
+    <option value="underwater">海底の森</option>
+    <option value="apocalypse">黙示録</option>
+  </select>
+</div>
+
+            <hr style="margin-bottom: 20px; opacity: 0.2;">
+
+            <!-- 2. リアルタイム統計情報 -->
+            <div class="stats">
+                <p style="font-size: 1.1rem; font-weight: bold; margin-bottom: 5px; margin-top: 0;">Year (Step): <span
+                        id="stepCount">0</span></p>
+                <div class="stat-rows">
+                    <div>平均土壌栄養度: <span id="avgSoil">20.0</span>%</div>
+                    <div>一次遷移エリア (栄養&lt;20): <span id="primaryArea">0</span>%</div>
+                    <div>二次遷移エリア (栄養&ge;50): <span id="secondaryArea">0</span>%</div>
+                </div>
+
+                <div style="display: flex; justify-content: space-around; margin: 15px 0;">
+                    <div style="text-align: center;">
+                        <canvas id="pieChartPlants" width="120" height="120"></canvas>
+                        <div style="font-size: 0.8rem; margin-top: 5px; color: #cbd5e1;">地表（植物・岩など）</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <canvas id="pieChartSoil" width="120" height="120"></canvas>
+                        <div style="font-size: 0.8rem; margin-top: 5px; color: #cbd5e1;">土壌の肥沃度</div>
+                    </div>
+                </div>
+
+                <div class="charts-dashboard">
+                    <div class="chart-panel">
+                        <h3 class="panel-title">時系列指標（直近20年）</h3>
+                        <div class="chart-wrapper" style="height: 180px;">
+                            <canvas id="diversityChart"></canvas>
+                        </div>
+                        <!-- カスタム凡例を復元 -->
+                        <div id="customLegend" style="margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 0.7rem; color: #d4d4d8; border-top: 1px solid #27272a; padding-top: 8px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="legend">
+                    <div class="legend-item"><span class="color-box empty"></span> 空き地 (EMPTY)</div>
+                    <div class="legend-item"><span class="color-box rock"></span> 岩 (ROCK)</div>
+                    <div class="legend-item"><span class="color-box sun"></span> 陽樹 (SUN_TREE)</div>
+                    <div class="legend-item"><span class="color-box shade"></span> 陰樹 (SHADE_TREE)</div>
+                    <div class="legend-item"><span class="color-box dead"></span> 枯れ木 (DEAD_TREE)</div>
+                    <div class="legend-item"><span class="color-box ash"></span> 灰 (ASH)</div>
+                    <div class="legend-item"><span class="color-box burning"></span> 火災/溶岩 (BURNING/LAVA)</div>
+                </div>
+                <div class="disaster-log">
+                    <h4 style="margin: 0 0 5px 0; font-size: 0.85rem; color: #a1a1aa;">📝 災害履歴</h4>
+                    <ul id="eventLogList"
+                        style="list-style: none; padding: 0; margin: 0; font-size: 0.8rem; color: #f87171;">
+                        <!-- ログアイテムがここに追加されます -->
+                    </ul>
+                </div>
+            </div>
+
+
+
+            <!-- 3. コントロール (表示・タイムトラベル・詳細設定) -->
+            <div class="controls" style="margin-top: 15px;">
+                <div class="view-toggles" style="margin-bottom: 15px;">
+                    <label><input type="radio" name="viewMode" value="plant" checked> 植物ビュー</label>
+                    <label><input type="radio" name="viewMode" value="soil"> 土壌ビュー</label>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <h3 style="margin-bottom: 5px; font-size: 1rem;">🕒 タイムトラベル（履歴）</h3>
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <span id="historyYearDisplay"
+                            style="font-size: 0.9rem; font-weight: bold; color: #a3a3a3;">履歴がありません</span>
+                        <button id="btnReturnPresent" class="action-btn" style="padding: 2px 8px; font-size: 0.8rem;"
+                            disabled>現在に戻る</button>
+                    </div>
+                    <input type="range" id="historySlider" min="0" max="0" value="0" disabled style="width: 100%;">
+                </div>
+
+                <details class="advanced-settings">
+                    <summary
+                        style="cursor: pointer; font-weight: bold; color: #60a5fa; padding: 8px 0; border-top: 1px solid #444; outline: none;">
+                        ⚙️ 詳細パラメータ設定 (開閉)</summary>
+                    <div style="margin-top: 10px; padding-left: 5px;">
+                        <div style="display: flex; gap: 8px; justify-content: flex-end; margin-bottom: 15px; flex-wrap: wrap;">
+                            <button id="btnExportPreset" style="padding: 4px 10px; font-size: 0.75rem; background: #0f172a; border: 1px solid #1e293b; color: #94a3b8; border-radius: 4px; cursor: pointer; white-space: nowrap;">📥 エクスポート</button>
+                            <button id="btnImportPreset" style="padding: 4px 10px; font-size: 0.75rem; background: #0f172a; border: 1px solid #1e293b; color: #94a3b8; border-radius: 4px; cursor: pointer; white-space: nowrap;">📤 インポート</button>
+                            <input type="file" id="importFileInput" accept=".json" style="display: none;">
+                            <button id="btnResetParams"
+                                style="padding: 4px 10px; font-size: 0.75rem; background: #3f3f46; border: 1px solid #52525b; color: #d4d4d8; border-radius: 4px; cursor: pointer; white-space: nowrap;">↺ デフォルト</button>
+                        </div>
+
+
+                        <h4
+                            style="margin: 15px 0 10px 0; padding-bottom: 5px; font-size: 0.95rem; color: #93c5fd; border-bottom: 1px solid #3f3f46;">
+                            🌱 植物の進入と成長</h4>
+                        <div class="control-group">
+                            <label>一次遷移の確率 <span id="primarySuccessionProbVal">0.020</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">岩場や不毛な土地に、最初の草や苔が根付く確率
+                            </p>
+                            <input type="range" id="primarySuccessionProb" min="0" max="0.1" step="0.001" value="0.020">
+                        </div>
+                        <div class="control-group">
+                            <label>陽樹の進入率 <span id="sunSeedVal">0.15</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">日当たりの良い空き地に、陽樹の種が芽吹く確率
+                            </p>
+                            <input type="range" id="sunSeedProb" min="0" max="1" step="0.01" value="0.15">
+                        </div>
+                        <div class="control-group">
+                            <label>陰樹の進入率 <span id="shadeSeedVal">0.05</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">陰樹の種が芽吹く確率（陽樹より低め）</p>
+                            <input type="range" id="shadeSeedProb" min="0" max="1" step="0.01" value="0.05">
+                        </div>
+                        <div class="control-group">
+                            <label>豊かな土壌の進入ブースト <span id="richSoilBoostVal">4.0</span>倍</label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">豊かな二次遷移エリアで、進入率が跳ね上がる倍率
+                            </p>
+                            <input type="range" id="richSoilBoost" min="1" max="20" step="0.1" value="4.0">
+                        </div>
+
+                        <h4
+                            style="margin: 25px 0 10px 0; padding-bottom: 5px; font-size: 0.95rem; color: #93c5fd; border-bottom: 1px solid #3f3f46;">
+                            🌲 植物の枯死と老衰</h4>
+                        <div class="control-group">
+                            <label>日陰の境界値 <span id="shadeThreshVal">5</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">
+                                周囲何マスに木があると「日陰」と判定されるかの基準</p>
+                            <input type="range" id="shadeThreshold" min="1" max="8" step="1" value="5">
+                        </div>
+                        <div class="control-group">
+                            <label>陽樹の日陰枯死率 <span id="shadeStressVal">0.30</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">日陰に耐えきれず、陽樹が枯れてしまう確率
+                            </p>
+                            <input type="range" id="shadeStressProb" min="0" max="1" step="0.01" value="0.30">
+                        </div>
+                        <div class="control-group">
+                            <label>陽樹の老衰率 <span id="sunLifeVal">0.05</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">寿命により、陽樹が自然に枯れ木になる確率
+                            </p>
+                            <input type="range" id="sunLifeProb" min="0" max="1" step="0.01" value="0.05">
+                        </div>
+                        <div class="control-group">
+                            <label>陰樹の老衰率 <span id="shadeLifeVal">0.005</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">寿命により、陰樹が自然に枯れ木になる確率
+                            </p>
+                            <input type="range" id="shadeLifeProb" min="0" max="1" step="0.001" value="0.005">
+                        </div>
+
+                        <h4
+                            style="margin: 25px 0 10px 0; padding-bottom: 5px; font-size: 0.95rem; color: #93c5fd; border-bottom: 1px solid #3f3f46;">
+                            🟫 土壌の性質と変化</h4>
+                        <div class="control-group">
+                            <label>土壌の最大保肥力 <span id="maxSoilFertilityVal">100.0</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">その環境の土が蓄えられる栄養の最大値</p>
+                            <input type="range" id="maxSoilFertility" min="10" max="500" step="1" value="100.0">
+                        </div>
+                        <div class="control-group">
+                            <label>土壌の拡散率 <span id="soilDiffusionRateVal">0.10</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">雨や風で、隣のマスへ栄養がどれだけ染み出すか
+                            </p>
+                            <input type="range" id="soilDiffusionRate" min="0" max="0.5" step="0.01" value="0.10">
+                        </div>
+                        <div class="control-group">
+                            <label>一次遷移の土壌閾値 <span id="primarySoilThresholdVal">20.0</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">
+                                栄養がこれを下回ると「不毛な土地」として扱われる</p>
+                            <input type="range" id="primarySoilThreshold" min="0" max="100" step="1" value="20.0">
+                        </div>
+                        <div class="control-group">
+                            <label>二次遷移の土壌閾値 <span id="secondarySoilThresholdVal">50.0</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">
+                                栄養がこれを超えると「豊かな黒土」として扱われる</p>
+                            <input type="range" id="secondarySoilThreshold" min="0" max="100" step="1" value="50.0">
+                        </div>
+                        <div class="control-group">
+                            <label>植物の土壌消費量 <span id="treeSoilConsumptionVal">1.0</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">木が生きるために、毎年消費する土の栄養量
+                            </p>
+                            <input type="range" id="treeSoilConsumption" min="0" max="5.0" step="0.1" value="1.0">
+                        </div>
+
+                        <h4
+                            style="margin: 25px 0 10px 0; padding-bottom: 5px; font-size: 0.95rem; color: #93c5fd; border-bottom: 1px solid #3f3f46;">
+                            ♻️ 物質の分解と還元</h4>
+                        <div class="control-group">
+                            <label>枯れ木の土壌還元量 <span id="deadTreeSoilGainVal">5.0</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">枯れ木が土に還った際、追加される栄養量</p>
+                            <input type="range" id="deadTreeSoilGain" min="0" max="20.0" step="0.5" value="5.0">
+                        </div>
+                        <div class="control-group">
+                            <label>枯れ木の分解速度 <span id="deadTreeDecompProbVal">0.30</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">枯れ木が風化し、完全に土へ戻るスピード</p>
+                            <input type="range" id="deadTreeDecompProb" min="0" max="1.0" step="0.01" value="0.30">
+                        </div>
+                        <div class="control-group">
+                            <label>灰の土壌還元量 <span id="ashSoilGainVal">40.0</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">燃え尽きた灰が土に還った際の栄養量（焼畑効果）
+                            </p>
+                            <input type="range" id="ashSoilGain" min="0" max="100.0" step="1.0" value="40.0">
+                        </div>
+                        <div class="control-group">
+                            <label>灰が土に馴染む確率 <span id="ashSettleProbVal">0.80</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">灰が消え、新しい土壌として定着する確率</p>
+                            <input type="range" id="ashSettleProb" min="0" max="1.0" step="0.01" value="0.80">
+                        </div>
+                        <div class="control-group">
+                            <label>岩の風化速度 <span id="rockWeatheringRateVal">0.10</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">冷えた岩から、毎年削れて蓄積する微量な土の量
+                            </p>
+                            <input type="range" id="rockWeatheringRate" min="0" max="1.0" step="0.01" value="0.10">
+                        </div>
+                        <div class="control-group">
+                            <label>岩が土に変わる閾値 <span id="rockToSoilThresholdVal">5.0</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">岩の上にどれだけ土が積もれば、植物が育てるか
+                            </p>
+                            <input type="range" id="rockToSoilThreshold" min="1" max="20" step="0.5" value="5.0">
+                        </div>
+
+                        <h4
+                            style="margin: 25px 0 10px 0; padding-bottom: 5px; font-size: 0.95rem; color: #93c5fd; border-bottom: 1px solid #3f3f46;">
+                            🌪️ 災害の発生と規模</h4>
+                        <div class="control-group">
+                            <label>台風の基準半径 <span id="typhoonRadiusBaseVal">4.0</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">
+                                台風の横幅の平均的な広さ（これにランダムなブレが加わる）</p>
+                            <input type="range" id="typhoonRadiusBase" min="1" max="20" step="0.5" value="4.0">
+                        </div>
+                        <div class="control-group">
+                            <label>台風発生率/年 <span id="typhoonProbVal">0.050</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">木々をなぎ倒し、枯れ木を発生させる確率</p>
+                            <input type="range" id="typhoonProb" min="0" max="0.1" step="0.001" value="0.050">
+                        </div>
+                        <div class="control-group">
+                            <label>落雷発生率/年 <span id="lightningProbVal">0.050</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">木に落ちて小規模な火災を引き起こす確率</p>
+                            <input type="range" id="lightningProb" min="0" max="0.1" step="0.001" value="0.050">
+                        </div>
+                        <div class="control-group">
+                            <label>大山火事発生率/年 <span id="wildfireProbVal">0.005</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">森全体を焼き尽くす大規模な自然発火の確率
+                            </p>
+                            <input type="range" id="wildfireProb" min="0" max="0.1" step="0.001" value="0.005">
+                        </div>
+                        <div class="control-group">
+                            <label>火山噴火発生率/年 <span id="volcanoProbVal">0.002</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">
+                                全てを溶岩と岩に変え、土壌をゼロにする噴火の確率</p>
+                            <input type="range" id="volcanoProb" min="0" max="0.05" step="0.001" value="0.002">
+                        </div>
+                        <div class="control-group">
+                            <label>火山の噴火半径 <span id="volcanoSizeVal">8.0</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">
+                                噴火によって溶岩に覆われる範囲の大きさ</p>
+                            <input type="range" id="volcanoSize" min="1" max="50" step="1" value="8.0">
+                        </div>
+                        <div class="control-group">
+                            <label>火災の延焼率 <span id="fireSpreadVal">0.25</span></label>
+                            <p style="font-size: 0.65rem; color: #71717a; margin: -2px 0 4px 0;">
+                                火が隣の木へ燃え広がる強さ（乾燥しているほど高い）</p>
+                            <input type="range" id="fireSpreadProb" min="0" max="1" step="0.01" value="0.25">
+                        </div>
+                    </div>
+                </details>
+            </div>
+        </aside>
+
+        <main class="canvas-container">
+            <canvas id="simCanvas" width="800" height="800"></canvas>
+        </main>
+    </div>
+    <!-- フローティング・スタート/ストップボタン -->
+    <div class="floating-controls">
+        <button id="floatingStartBtn" class="fab-btn">▶</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

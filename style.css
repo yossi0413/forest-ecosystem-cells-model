@@ -1,0 +1,436 @@
+:root {
+    --bg-color: #1a1a2e;
+    --panel-bg: #16213e;
+    --text-color: #e94560;
+    --text-light: #fff;
+    --accent: #0f3460;
+    
+    --color-empty: #8B4513;
+    --color-sun: #7CFC00;
+    --color-shade: #006400;
+    --color-dead: #707070; /* 枯れ木は濃いグレー（元に戻す） */
+    --color-ash: #e5e7eb;  /* 燃え尽きた白い灰 */
+    --color-rock: #450a0a; /* 溶岩が冷えたような極めて濃い赤 */
+    --color-burning: #FF4500;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-light);
+    height: 100vh;
+    display: flex;
+    overflow: hidden;
+}
+
+.container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.sidebar {
+    width: 350px;
+    background-color: var(--panel-bg);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    overflow-y: auto;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+    z-index: 10;
+}
+
+h1 {
+    font-size: 1.5rem;
+    color: #4ade80;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    font-size: 0.9rem;
+    color: #9ca3af;
+    margin-bottom: 15px;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin: 5px 0;
+}
+
+.view-toggles {
+    display: flex;
+    gap: 15px;
+    background: rgba(0,0,0,0.3);
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.view-toggles label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.control-group label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: #d1d5db;
+}
+
+.control-group span {
+    font-weight: 600;
+    color: #60a5fa;
+}
+
+input[type=range] {
+    width: 100%;
+    cursor: pointer;
+    accent-color: #3b82f6;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+button {
+    flex: 1 1 calc(50% - 5px);
+    padding: 10px;
+    border: none;
+    border-radius: 6px;
+    background-color: #374151;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    background-color: #4b5563;
+}
+
+button.primary {
+    background-color: #2563eb;
+    flex-basis: 100%;
+}
+
+button.primary:hover {
+    background-color: #1d4ed8;
+}
+
+button.danger {
+    background-color: #dc2626;
+    flex-basis: 100%;
+}
+
+button.danger:hover {
+    background-color: #b91c1c;
+}
+
+.disaster-actions {
+    background: rgba(0,0,0,0.3);
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* プリセットUI用の統一デザイン */
+.preset-group {
+  background: var(--panel-bg);
+  padding: 12px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.preset-group label {
+  color: #60a5fa;
+  font-size: 0.9rem;
+}
+.preset-group select {
+  background: #374151;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px;
+  cursor: pointer;
+}
+.preset-group select:focus {
+  outline: 2px solid #3b82f6;
+}
+
+.disaster-actions p {
+    flex-basis: 100%;
+    font-size: 0.85rem;
+    color: #fca5a5;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+button.volcano { background-color: #b91c1c; }
+button.volcano:hover { background-color: #991b1b; }
+
+button.wildfire { background-color: #ea580c; }
+button.wildfire:hover { background-color: #c2410c; }
+
+button.typhoon { background-color: #0ea5e9; }
+button.typhoon:hover { background-color: #0284c7; }
+
+.stats {
+    margin-top: 20px;
+    background: rgba(0,0,0,0.2);
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.stats p {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.stat-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.85rem;
+    margin-bottom: 15px;
+    color: #e5e7eb;
+}
+
+.stat-rows span {
+    font-weight: bold;
+    color: #60a5fa;
+}
+
+.legend {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+}
+
+.color-box {
+    width: 16px;
+    height: 16px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+.color-box.empty { background-color: var(--color-empty); }
+.color-box.rock { background-color: var(--color-rock); }
+.color-box.sun { background-color: var(--color-sun); }
+.color-box.shade { background-color: var(--color-shade); }
+.color-box.dead { background-color: var(--color-dead); }
+.color-box.ash { background-color: var(--color-ash); }
+.color-box.burning { background-color: var(--color-burning); }
+
+.canvas-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #000;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.canvas-container.preview-mode canvas {
+    outline: 4px solid #3b82f6;
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+}
+
+#simCanvas {
+    background-color: var(--color-empty);
+}
+
+canvas {
+    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+    image-rendering: pixelated; /* Keeps cells sharp */
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.disaster-log {
+    margin-top: 15px;
+    background: #1e1e1e;
+    border: 1px solid #3f3f46;
+    border-radius: 4px;
+    padding: 8px;
+    height: 120px;
+    overflow-y: auto;
+}
+
+.disaster-log li {
+    margin-bottom: 4px;
+    border-bottom: 1px dashed #3f3f46;
+    padding-bottom: 4px;
+}
+
+/* コンパクト評価カード */
+.evaluation-card.compact {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 12px;
+    margin: 10px 0 20px 0;
+}
+
+.eval-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.score-label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: bold;
+}
+
+.evaluation-card.compact {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 10px;
+    margin: 10px 0 20px 0;
+}
+
+/* チャートダッシュボード */
+.charts-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.chart-panel {
+    background: #18181b;
+    border: 1px solid #3f3f46;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.panel-title {
+    margin: 0 0 8px 0;
+    font-size: 0.8rem;
+    color: #93c5fd;
+    border-bottom: 1px solid #27272a;
+    padding-bottom: 4px;
+}
+
+.chart-wrapper {
+    height: 180px;
+    width: 100%;
+}
+
+.progress-container {
+    background: #334155;
+    height: 4px;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: linear-gradient(to right, #3b82f6, #8b5cf6);
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.status-badge {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.65rem;
+    font-weight: bold;
+}
+
+.status-badge.investigative {
+    background: #1e3a8a;
+    color: #93c5fd;
+    animation: pulse-blue 2s infinite;
+}
+
+.status-badge.complete {
+    background: #064e3b;
+    color: #6ee7b7;
+}
+
+@keyframes pulse-blue {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
+
+/* フローティングコントロール */
+.floating-controls {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+}
+
+.fab-btn {
+    width: 65px;
+    height: 65px;
+    border-radius: 50% !important;
+    background-color: #2563eb !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    font-size: 1.5rem !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    color: white !important;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fab-btn:hover {
+    transform: scale(1.1) translateY(-5px);
+    background-color: #1d4ed8 !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+}
+
+.fab-btn:active {
+    transform: scale(0.95);
+}
+
+.fab-btn.running {
+    background-color: #dc2626 !important;
+}
